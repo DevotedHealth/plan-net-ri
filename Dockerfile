@@ -9,7 +9,7 @@ COPY --from=build /usr/src/app/target/plan-net.war /var/lib/jetty/webapps/plan-n
 COPY --from=build /usr/src/app/target /var/lib/jetty/target 
 USER root
 RUN apk add --update \
-    curl \
+    alpine-sdk \
     ruby-dev \
     ruby-bigdecimal \
     && rm -rf /var/cache/apk/*
