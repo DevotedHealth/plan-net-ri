@@ -11,6 +11,7 @@ USER root
 RUN apk add --update \
     curl \
     ruby-dev \
+    ruby-bigdecimal \
     && rm -rf /var/cache/apk/*
 RUN gem install rdoc --no-document
 RUN gem install zip
