@@ -8,6 +8,10 @@ FROM jetty:9-jre8-alpine
 COPY --from=build /usr/src/app/target/plan-net.war /var/lib/jetty/webapps/plan-net.war
 COPY --from=build /usr/src/app/target /var/lib/jetty/target 
 USER root
+RUN apk add --update \
+    curl \
+    ruby-dev \
+    && rm -rf /var/cache/apk/*
 RUN chown -R jetty:jetty /var/lib/jetty/target
 USER jetty:jetty
 EXPOSE 8080
