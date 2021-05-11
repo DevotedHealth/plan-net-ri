@@ -12,6 +12,9 @@ RUN apk add --update \
     curl \
     ruby-dev \
     && rm -rf /var/cache/apk/*
+RUN gem install rdoc --no-document
+RUN gem install zip
+RUN gem install httparty
 RUN chown -R jetty:jetty /var/lib/jetty/target
 USER jetty:jetty
 EXPOSE 8080
