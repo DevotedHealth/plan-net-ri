@@ -7,8 +7,16 @@ FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 def upload_plan_net_resources
   file_paths = [
     File.join(__dir__, 'conformance', '*', '*.json'),
-    File.join(__dir__, '..', 'pdex-plan-net-sample-data', 'output', '**', '*.json')
   ]
+
+  if ARGV.length > 0
+    # sample data directory provided through arguments
+    file_paths.append(File.join(__dir__, ARGV[0], 'output', '**', '*.json'))
+  else
+    # Default sample data directory
+    file_paths.append(File.join(__dir__, '..', 'pdex-plan-net-sample-data', 'output', '**', '*.json'))
+  end
+
   filenames = file_paths.flat_map do |file_path|
     Dir.glob(file_path)
       .select { |filename| filename.end_with? '.json' }
