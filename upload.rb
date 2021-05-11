@@ -116,4 +116,3 @@ ensure
 end
 
 upload_plan_net_resources
-upload_ig_examples
