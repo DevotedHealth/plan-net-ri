@@ -35,11 +35,15 @@ def upload_plan_net_resources
         if record_exists
           puts "Patient with identifier #{patient_identifier} already exists, skipping."
         else
-          response = execute_transaction(resource)
+          response = execute_transaction(resource)      
+          # TODO remove!
+          puts response unless response.success?
           filenames_to_retry << filename unless response.success?
         end
       else
         response = upload_resource(resource)
+        # TODO remove!
+        puts response unless response.success?
         filenames_to_retry << filename unless response.success?
       end
 
