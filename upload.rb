@@ -26,6 +26,7 @@ def upload_plan_net_resources
   loop do
     filenames_to_retry = []
     filenames.each_with_index do |filename, index|
+      puts filename
       resource = JSON.parse(File.read(filename), symbolize_names: true)
       if filename.end_with? ".transaction.json"
 
