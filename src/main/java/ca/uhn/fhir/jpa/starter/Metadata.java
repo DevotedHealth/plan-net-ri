@@ -25,7 +25,7 @@ public class Metadata extends ServerCapabilityStatementProvider {
     public CapabilityStatement getServerConformance(HttpServletRequest request, RequestDetails requestDetails) {
 
         CapabilityStatement c = super.getServerConformance(request, requestDetails);
-        c.setTitle("Da Vinci Payer Data exchange Plan Network Reference Implementation");
+        c.setTitle("Devoted Reference Implementation");
         c.setStatus(PublicationStatus.DRAFT);
         c.setVersion("1.0.0");
         c.setExperimental(true);
@@ -54,8 +54,8 @@ public class Metadata extends ServerCapabilityStatementProvider {
             List<CapabilityStatementRestResourceComponent> resources = rest.getResource();
             for(CapabilityStatementRestResourceComponent resource : resources) {
                 List<ResourceInteractionComponent> interactions = new ArrayList<>();
-                interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.HISTORYINSTANCE));
-                interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.HISTORYTYPE));
+                // interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.HISTORYINSTANCE));
+                // interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.HISTORYTYPE));
                 interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.READ));
                 interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.SEARCHTYPE));
                 interactions.add(new ResourceInteractionComponent().setCode(TypeRestfulInteraction.VREAD));
