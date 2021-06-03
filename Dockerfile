@@ -12,11 +12,14 @@ RUN apk add --update \
     alpine-sdk \
     ruby-dev \
     ruby-bigdecimal \
+    ruby-json \
     && rm -rf /var/cache/apk/*
 RUN gem install rdoc --no-document
 RUN gem install zip
+RUN gem install bundler
 RUN gem install httparty
 RUN gem install json
+RUN gem install nokogiri
 RUN chown -R jetty:jetty /var/lib/jetty/target
 USER jetty:jetty
 EXPOSE 8080
