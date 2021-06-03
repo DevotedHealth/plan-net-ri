@@ -13,6 +13,7 @@ RUN apk add --update \
     ruby-dev \
     ruby-bigdecimal \
     ruby-json \
+    zlib-dev \
     && rm -rf /var/cache/apk/*
 RUN gem install rdoc --no-document
 RUN gem install zip
