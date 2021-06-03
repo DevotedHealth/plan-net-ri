@@ -18,6 +18,7 @@ RUN apk add --update \
 RUN gem install rdoc --no-document
 RUN gem install zip
 RUN gem install bundler
+RUN gem install etc
 RUN gem install httparty
 RUN gem install json
 RUN gem install nokogiri
