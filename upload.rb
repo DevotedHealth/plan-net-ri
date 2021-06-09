@@ -9,6 +9,8 @@ def upload_plan_net_resources
     File.join(__dir__, 'conformance', '*', '*.json'),
   ]
 
+  resources = {}
+
   if ARGV.length > 0
     # sample data directory provided through arguments
     file_paths.append(File.join(__dir__, ARGV[0], 'output', '**', '*.json'))
@@ -23,27 +25,26 @@ def upload_plan_net_resources
   end
   puts "#{filenames.length} resources to upload"
   old_retry_count = filenames.length
+
   loop do
     filenames_to_retry = []
     filenames.each_with_index do |filename, index|
-      puts filename
+      start = Time.now
+      puts "Parsing #{filename}"
       resource = JSON.parse(File.read(filename), symbolize_names: true)
-      if filename.end_with? ".transaction.json"
+      parse_finish = Time.now
+      # puts "parsing time: #{parse_finish - start}"
 
-        patient_identifier = patient_identifier_in_transaction(resource)
-        record_exists = record_exists_on_server?(patient_identifier)
+      # aggregate resources
+      resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
+      resources[resource[:resourceType]].push(resource)
 
-        if record_exists
-          puts "Patient with identifier #{patient_identifier} already exists, skipping."
-        else
-          response = execute_transaction(resource)      
-          # TODO remove!
-          puts response unless response.success?
-          filenames_to_retry << filename unless response.success?
-        end
-      else
-        response = upload_resource(resource)
-        # TODO remove!
+      if resources[resource[:resourceType]].length() > 200
+        upload_start = Time.now
+        response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
+        upload_finish = Time.now
+        puts "upload time: #{upload_finish - upload_start}"
+        resources[resource[:resourceType]] = [] unless !response.success?
         puts response unless response.success?
         filenames_to_retry << filename unless response.success?
       end
@@ -51,7 +52,22 @@ def upload_plan_net_resources
       if index % 100 == 0
         puts index
       end
+      finish = Time.now
+
+      execution_time = finish - start
+      puts "execution time: #{execution_time}"
     end
+
+    resources.each do |key, value|
+      upload_start = Time.now
+      response = upload_resources(key, value)
+      upload_finish = Time.now
+      puts "upload time: #{upload_finish - upload_start}"
+      resources[key] = [] unless !response.success?
+      puts response unless response.success?
+      filenames_to_retry << filename unless response.success?
+    end
+
     break if filenames_to_retry.empty?
     retry_count = filenames_to_retry.length
     if retry_count == old_retry_count
@@ -76,22 +92,31 @@ def upload_resource(resource)
   )
 end
 
-def patient_identifier_in_transaction(transaction)
+def upload_resources(resource_type, resources)
+  bundle = {
+    :resourceType => "Bundle",
+    :id => "bundle-transaction",
+    :type => "transaction",
+    :entry => [],
+  }
 
-  patient_record = transaction[:entry]&.find {|r| r[:resource][:resourceType] == 'Patient'}
-  identifier = patient_record[:resource][:identifier].first
-  "#{identifier[:system]}|#{identifier[:value]}"
-end
+  resources.each do |resource|
+    bundle_resource = {
+      :resource => resource,
+      :request => {
+        :method => "POST",
+        :url => resource_type,
+      }
+    }
 
-def record_exists_on_server?(patient_identifier)
+    bundle[:entry] << bundle_resource
+  end
 
-  response = HTTParty.get(
-    "#{FHIR_SERVER}/Patient",
-    query: { identifier: patient_identifier },
+  HTTParty.post(
+    "#{FHIR_SERVER}",
+    body: bundle.to_json,
     headers: { 'Content-Type': 'application/json' }
   )
-  JSON.parse(response.body)['entry']&.any?
-
 end
 
 def execute_transaction(transaction)
@@ -101,31 +126,6 @@ def execute_transaction(transaction)
     body: transaction.to_json,
     headers: { 'Content-Type': 'application/json' }
   )
-end
-
-def upload_ig_examples
-    puts "Uploading ig examples..."
-    definitions_url = 'https://build.fhir.org/ig/HL7/carin-bb/examples.json.zip'
-    definitions_data = HTTParty.get(definitions_url, verify: false)
-    definitions_file = Tempfile.new
-    begin
-        definitions_file.write(definitions_data)
-    ensure
-        definitions_file.close
-    end
-
-    Zip::File.open(definitions_file.path) do |zip_file|
-        zip_file.entries
-        .select { |entry| entry.name.end_with? '.json' }
-        .reject { |entry| entry.name.start_with? 'ImplementationGuide' }
-        .each do |entry|
-            resource = JSON.parse(entry.get_input_stream.read, symbolize_names: true)
-            response = upload_resource(resource)
-        end
-    end
-    puts " ...done"
-ensure
-    definitions_file.unlink
 end
 
 upload_plan_net_resources
