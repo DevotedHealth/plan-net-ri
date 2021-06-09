@@ -117,7 +117,8 @@ def upload_resources(resource_type, resources)
   HTTParty.post(
     "#{FHIR_SERVER}",
     body: bundle.to_json,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 60
   )
 end
 
