@@ -30,7 +30,7 @@ def upload_plan_net_resources
     filenames_to_retry = []
     filenames.each_with_index do |filename, index|
       start = Time.now
-      puts "Parsing #{filename}"
+      # puts "Parsing #{filename}"
       resource = JSON.parse(File.read(filename), symbolize_names: true)
       parse_finish = Time.now
       # puts "parsing time: #{parse_finish - start}"
@@ -55,7 +55,7 @@ def upload_plan_net_resources
       finish = Time.now
 
       execution_time = finish - start
-      puts "execution time: #{execution_time}"
+      # puts "execution time: #{execution_time}"
     end
 
     resources.each do |key, value|
