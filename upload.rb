@@ -1,15 +1,14 @@
 require 'zip'
 require 'httparty'
 
+NUM_THREADS = 4
 FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 # FHIR_SERVER = 'https://api.logicahealth.org/DVJan21CnthnPDex/open'
 
 def upload_plan_net_resources
   file_paths = [
-    File.join(__dir__, 'conformance', '*', '*.json'),
+    # File.join(__dir__, 'conformance', '*', '*.json'),
   ]
-
-  resources = {}
 
   if ARGV.length > 0
     # sample data directory provided through arguments
@@ -19,66 +18,69 @@ def upload_plan_net_resources
     file_paths.append(File.join(__dir__, '..', 'pdex-plan-net-sample-data', 'output', '**', '*.json'))
   end
 
-  filenames = file_paths.flat_map do |file_path|
-    Dir.glob(file_path)
-      .select { |filename| filename.end_with? '.json' }
+  filenames = Queue.new
+  file_paths.flat_map do |file_path|
+    Dir.glob(file_path).each do |filename| 
+      filenames.push(filename) if filename.end_with? '.json'
+    end
   end
   puts "#{filenames.length} resources to upload"
   old_retry_count = filenames.length
 
-  loop do
-    filenames_to_retry = []
-    filenames.each_with_index do |filename, index|
-      start = Time.now
-      # puts "Parsing #{filename}"
-      resource = JSON.parse(File.read(filename), symbolize_names: true)
-      parse_finish = Time.now
-      # puts "parsing time: #{parse_finish - start}"
+  filenames_to_retry = Queue.new
+  @threads = Array.new(NUM_THREADS) do
+    Thread.new do
+      resources = {}
 
-      # aggregate resources
-      resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
-      resources[resource[:resourceType]].push(resource)
+      until filenames.empty?
+        # This will remove the first object from @queue
+        filename = filenames.pop
 
-      if resources[resource[:resourceType]].length() > 200
+        start = Time.now
+        # puts "Parsing #{filename}"
+        resource = JSON.parse(File.read(filename), symbolize_names: true)
+        parse_finish = Time.now
+
+        # aggregate resources
+        resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
+        resources[resource[:resourceType]].push(resource)
+
+        if resources[resource[:resourceType]].length() > 150
+          puts "uploading batch"
+          upload_start = Time.now
+          response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
+          upload_finish = Time.now
+          puts "upload time: #{upload_finish - upload_start}"
+          resources[resource[:resourceType]] = [] unless !response.success?
+          puts response unless response.success?
+          filenames_to_retry << filename unless response.success?
+        end
+        finish = Time.now
+
+        execution_time = finish - start
+        puts "execution time: #{execution_time}"
+      end
+
+      resources.each do |key, value|
+        puts "uploading last batch"
         upload_start = Time.now
-        response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
+        response = upload_resources(key, value)
         upload_finish = Time.now
         puts "upload time: #{upload_finish - upload_start}"
-        resources[resource[:resourceType]] = [] unless !response.success?
+        resources[key] = [] unless !response.success?
         puts response unless response.success?
         filenames_to_retry << filename unless response.success?
       end
-
-      if index % 100 == 0
-        puts index
-      end
-      finish = Time.now
-
-      execution_time = finish - start
-      # puts "execution time: #{execution_time}"
     end
-
-    resources.each do |key, value|
-      upload_start = Time.now
-      response = upload_resources(key, value)
-      upload_finish = Time.now
-      puts "upload time: #{upload_finish - upload_start}"
-      resources[key] = [] unless !response.success?
-      puts response unless response.success?
-      filenames_to_retry << filename unless response.success?
-    end
-
-    break if filenames_to_retry.empty?
-    retry_count = filenames_to_retry.length
-    if retry_count == old_retry_count
-      puts "Unable to upload #{retry_count} resources:"
-      puts filenames.join("\n")
-      break
-    end
-    puts "#{retry_count} resources to retry"
-    filenames = filenames_to_retry
-    old_retry_count = retry_count
   end
+
+  begin
+    @threads.each(&:join)
+  ensure
+    # TODO
+  end
+
+  puts "#{filenames_to_retry.length} resources to retry" unless filenames_to_retry.empty?
 end
 
 def upload_resource(resource)
