@@ -46,11 +46,11 @@ def upload_plan_net_resources
         resources[resource[:resourceType]].push(resource)
 
         if resources[resource[:resourceType]].length() > 150
-          puts "uploading batch"
+          puts "uploading batch of #{resources[resource[:resourceType]].length()}"
           upload_start = Time.now
           response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
           upload_finish = Time.now
-          puts "upload time: #{upload_finish - upload_start}"
+          # puts "upload time: #{upload_finish - upload_start}"
           resources[resource[:resourceType]] = [] unless !response.success?
           puts response unless response.success?
           filenames_to_retry << filename unless response.success?
@@ -58,7 +58,7 @@ def upload_plan_net_resources
         finish = Time.now
 
         execution_time = finish - start
-        puts "execution time: #{execution_time}"
+        # puts "execution time: #{execution_time}"
       end
 
       resources.each do |key, value|
