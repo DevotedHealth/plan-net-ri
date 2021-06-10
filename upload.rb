@@ -2,7 +2,7 @@ require 'zip'
 require 'httparty'
 
 NUM_THREADS = 1
-BATCH_SIZE = 40
+BATCH_SIZE = 60
 FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 # FHIR_SERVER = 'https://api.logicahealth.org/DVJan21CnthnPDex/open'
 
@@ -118,7 +118,7 @@ def upload_resources(resource_type, resources)
   HTTParty.post(
     "#{FHIR_SERVER}",
     body: bundle.to_json,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     timeout: 120
   )
 end
