@@ -45,7 +45,7 @@ def upload_plan_net_resources
         resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
         resources[resource[:resourceType]].push(resource)
 
-        if resources[resource[:resourceType]].length() > 150
+        if resources[resource[:resourceType]].length() > 100
           puts "uploading batch of #{resources[resource[:resourceType]].length()}"
           upload_start = Time.now
           response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
@@ -118,7 +118,7 @@ def upload_resources(resource_type, resources)
     "#{FHIR_SERVER}",
     body: bundle.to_json,
     headers: { 'Content-Type': 'application/json' },
-    timeout: 60
+    timeout: 120
   )
 end
 
