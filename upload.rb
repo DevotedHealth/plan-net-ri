@@ -2,7 +2,7 @@ require 'zip'
 require 'httparty'
 
 NUM_THREADS = 1
-BATCH_SIZE = 20
+BATCH_SIZE = 40
 FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 # FHIR_SERVER = 'https://api.logicahealth.org/DVJan21CnthnPDex/open'
 
@@ -46,8 +46,8 @@ def upload_plan_net_resources
         resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
         resources[resource[:resourceType]].push(resource)
 
-        if resources[resource[:resourceType]].length() > BATCH_SIZE
-          puts "uploading batch of #{resources[resource[:resourceType]].length()}"
+        if resources[resource[:resourceType]].length() >= BATCH_SIZE
+          puts "uploading batch of #{resources[resource[:resourceType]].length()} #{resource[:resourceType]} resources"
           upload_start = Time.now
           response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
           upload_finish = Time.now
@@ -63,7 +63,7 @@ def upload_plan_net_resources
       end
 
       resources.each do |key, value|
-        puts "uploading last batch"
+        puts "uploading last batch of #{key}"
         upload_start = Time.now
         response = upload_resources(key, value)
         upload_finish = Time.now
