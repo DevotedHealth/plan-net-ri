@@ -104,11 +104,12 @@ def upload_resources(resource_type, resources)
   }
 
   resources.each do |resource|
+    puts resource
     bundle_resource = {
       :resource => resource,
       :request => {
-        :method => "POST",
-        :url => resource_type,
+        :method => "PUT",
+        :url => "#{resource_type}/#{resource[:id]}",
       }
     }
 
