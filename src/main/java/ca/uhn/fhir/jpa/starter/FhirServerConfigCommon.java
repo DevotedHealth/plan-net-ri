@@ -90,7 +90,8 @@ public class FhirServerConfigCommon {
   @Bean()
   public DaoConfig daoConfig() {
     DaoConfig retVal = new DaoConfig();
-
+    // Allow clients to set any ID since all resources should have a valid ID on upload
+    retVal.setResourceClientIdStrategy(DaoConfig.ClientIdStrategyEnum.ANY);
     retVal.setIndexMissingFields(this.enableIndexMissingFields ? DaoConfig.IndexEnabledEnum.ENABLED : DaoConfig.IndexEnabledEnum.DISABLED);
     retVal.setAutoCreatePlaceholderReferenceTargets(this.autoCreatePlaceholderReferenceTargets);
     retVal.setEnforceReferentialIntegrityOnWrite(this.enforceReferentialIntegrityOnWrite);
