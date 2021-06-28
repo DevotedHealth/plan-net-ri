@@ -1,7 +1,7 @@
 require 'zip'
 require 'httparty'
 
-NUM_THREADS = 1
+NUM_THREADS = 4
 BATCH_SIZE = 100
 FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 # FHIR_SERVER = 'https://api.logicahealth.org/DVJan21CnthnPDex/open'
@@ -36,6 +36,7 @@ def upload_plan_net_resources
       until filenames.empty?
         # This will remove the first object from @queue
         filename = filenames.pop
+        puts "uploading resources from #{filename}"
 
         start = Time.now
         # puts "Parsing #{filename}"
@@ -47,11 +48,11 @@ def upload_plan_net_resources
         resources[resource[:resourceType]].push(resource)
 
         if resources[resource[:resourceType]].length() >= BATCH_SIZE
-          puts "uploading batch of #{resources[resource[:resourceType]].length()} #{resource[:resourceType]} resources"
+          # puts "uploading batch of #{resources[resource[:resourceType]].length()} #{resource[:resourceType]} resources"
           upload_start = Time.now
           response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
           upload_finish = Time.now
-          puts "upload time: #{upload_finish - upload_start}"
+          # puts "upload time: #{upload_finish - upload_start}"
           resources[resource[:resourceType]] = [] unless !response.success?
           puts response unless response.success?
           filenames_to_retry << filename unless response.success?
