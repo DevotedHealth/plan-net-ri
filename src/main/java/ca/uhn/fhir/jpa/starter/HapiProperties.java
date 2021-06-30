@@ -250,7 +250,16 @@ public class HapiProperties {
     }
 
     public static String getServerAddress() {
-        return HapiProperties.getProperty(SERVER_ADDRESS);
+        String environment = System.getenv("ENV");
+        String serverAddress = HapiProperties.getProperty(SERVER_ADDRESS);
+
+        if (environment != null && environment.equalsIgnoreCase("DEV")) {
+          serverAddress = "https://fhir.dev.devoted.com/fhir";
+        } else if (environment != null && environment.equalsIgnoreCase("PROD")) {
+          serverAddress = "https://fhir.devoted.com/fhir";
+        }
+
+        return serverAddress;
     }
 
     public static Integer getDefaultPageSize() {
