@@ -1,8 +1,8 @@
 require 'zip'
 require 'httparty'
 
-NUM_THREADS = 4
-BATCH_SIZE = 100
+NUM_THREADS = 1
+BATCH_SIZE = 80
 FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 # FHIR_SERVER = 'https://api.logicahealth.org/DVJan21CnthnPDex/open'
 
