@@ -15,7 +15,7 @@ RUN apk add --update \
     ruby-json \
     zlib-dev \
     && rm -rf /var/cache/apk/*
-RUN gem install rdoc --no-document
+RUN gem install rdoc -v '6.3.3' --no-document
 RUN gem install zip
 RUN gem install bundler
 RUN gem install etc
