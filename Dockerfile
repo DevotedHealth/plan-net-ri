@@ -21,7 +21,7 @@ RUN gem install bundler
 RUN gem install etc
 RUN gem install httparty
 RUN gem install json
-RUN gem install nokogiri
+RUN gem install -v '1.12.5' nokogiri
 RUN chown -R jetty:jetty /var/lib/jetty/target
 USER jetty:jetty
 EXPOSE 8080
