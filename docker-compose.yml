@@ -7,3 +7,6 @@ services:
       - ./data:/var/lib/jetty/target
     ports:
       - "8080:8080"
+    environment:
+      - JVM_OPTS=-Xmx24g -Xms24g -XX:MaxPermSize=1024m
+      - JAVA_OPTS=-Xmx24g -Xms24g -XX:MaxPermSize=1024m
