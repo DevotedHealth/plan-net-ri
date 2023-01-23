@@ -60,7 +60,7 @@ def upload_plan_net_resources
               response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
             end
             upload_finish = Time.now
-          # puts "upload time: #{upload_finish - upload_start}"
+            # puts "upload time: #{upload_finish - upload_start}"
             resources[resource[:resourceType]] = [] unless !response.success?
             puts response unless response.success?
             filenames_to_retry << filename unless response.success?
