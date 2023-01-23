@@ -94,7 +94,7 @@ def upload_plan_net_resources
     # TODO
   end
 
-  puts "#{filenames_to_retry.length} resources to retry" unless filenames_to_retry.empty?
+  raise "#{filenames_to_retry.length} resources to retry" unless filenames_to_retry.empty?
 end
 
 def upload_resource(resource)
