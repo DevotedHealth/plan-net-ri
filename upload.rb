@@ -2,7 +2,7 @@ require 'zip'
 require 'httparty'
 
 NUM_THREADS = 1
-BATCH_SIZE = 80
+BATCH_SIZE = 120
 FHIR_SERVER = 'http://localhost:8080/plan-net/fhir'
 # FHIR_SERVER = 'https://api.logicahealth.org/DVJan21CnthnPDex/open'
 
@@ -36,31 +36,43 @@ def upload_plan_net_resources
       until filenames.empty?
         # This will remove the first object from @queue
         filename = filenames.pop
+        next if !filename
         puts "uploading resources from #{filename}"
 
         start = Time.now
         # puts "Parsing #{filename}"
-        resource = JSON.parse(File.read(filename), symbolize_names: true)
-        parse_finish = Time.now
+        begin
+          resource = JSON.parse(File.read(filename), symbolize_names: true)
+          parse_finish = Time.now
 
-        # aggregate resources
-        resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
-        resources[resource[:resourceType]].push(resource)
+          # aggregate resources
+          resources[resource[:resourceType]] = [] unless resources.key?(resource[:resourceType])
+          resources[resource[:resourceType]].push(resource)
 
-        if resources[resource[:resourceType]].length() >= BATCH_SIZE
-          # puts "uploading batch of #{resources[resource[:resourceType]].length()} #{resource[:resourceType]} resources"
-          upload_start = Time.now
-          response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
-          upload_finish = Time.now
-          # puts "upload time: #{upload_finish - upload_start}"
-          resources[resource[:resourceType]] = [] unless !response.success?
-          puts response unless response.success?
-          filenames_to_retry << filename unless response.success?
-        end
-        finish = Time.now
+          if resource[:resourceType] == 'OrganizationAffiliation' || resources[resource[:resourceType]].length() >= BATCH_SIZE
+            # puts "uploading batch of #{resources[resource[:resourceType]].length()} #{resource[:resourceType]} resources"
+            upload_start = Time.now
+            begin
+              response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
+            rescue Net::ReadTimeout
+              puts "Net timeout, sleeping"
+              sleep 60
+              response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
+            end
+            upload_finish = Time.now
+            # puts "upload time: #{upload_finish - upload_start}"
+            resources[resource[:resourceType]] = [] unless !response.success?
+            puts response unless response.success?
+            filenames_to_retry << filename unless response.success?
+          end
+          finish = Time.now
 
-        execution_time = finish - start
+          execution_time = finish - start
         # puts "execution time: #{execution_time}"
+        rescue StandardError => error
+          puts error
+          puts filename
+        end
       end
 
       resources.each do |key, value|
@@ -82,7 +94,7 @@ def upload_plan_net_resources
     # TODO
   end
 
-  puts "#{filenames_to_retry.length} resources to retry" unless filenames_to_retry.empty?
+  raise "#{filenames_to_retry.length} resources to retry" unless filenames_to_retry.empty?
 end
 
 def upload_resource(resource)
