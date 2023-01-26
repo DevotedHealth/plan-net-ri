@@ -37,7 +37,6 @@ def upload_plan_net_resources
         # This will remove the first object from @queue
         filename = filenames.pop
         next if !filename
-        puts "uploading resources from #{filename}"
 
         start = Time.now
         # puts "Parsing #{filename}"
@@ -52,6 +51,7 @@ def upload_plan_net_resources
           if resource[:resourceType] == 'OrganizationAffiliation' || resources[resource[:resourceType]].length() >= BATCH_SIZE
             # puts "uploading batch of #{resources[resource[:resourceType]].length()} #{resource[:resourceType]} resources"
             upload_start = Time.now
+            puts "#{resource[:resourceType]}: Uploading batch of #{resources[resource[:resourceType]].length}"
             begin
               response = upload_resources(resource[:resourceType], resources[resource[:resourceType]])
             rescue Net::ReadTimeout
